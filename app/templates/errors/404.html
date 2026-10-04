@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found (404) — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 580px; margin: 3rem auto; text-align: center; padding: 2.5rem 1.5rem;">
+    <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; font-family: var(--font-mono); color: var(--brand-primary); font-weight: 800;">404</h1>
+    <h2 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--text-primary);">Resource Not Found</h2>
+    <p class="card-body" style="margin-bottom: 1.75rem; color: var(--text-secondary);">
+        The requested URL was not found on this server. Please check the address or return to the main dashboard.
+    </p>
+    <a href="{{ url_for('main.index') }}" class="btn">Return to Home</a>
+</div>
+{% endblock %}

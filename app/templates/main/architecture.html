@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Cryptographic Architecture — VaultPay{% endblock %}
+
+{% block content %}
+<div class="architecture-container" style="max-width: 1050px; margin: 0 auto; padding-bottom: 3rem;">
+
+    <!-- Page Header & Badges -->
+    <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+            <h1 style="font-size: 1.85rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">
+                CRYPTOGRAPHIC ARCHITECTURE
+            </h1>
+            <span class="badge" style="background: #17202A; color: #FFFFFF; font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm); letter-spacing: 0.05em;">
+                AUTHENTICATED ACCESS ONLY
+            </span>
+            <span class="badge" style="background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm);">
+                SYSTEM SPECIFICATION
+            </span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0; max-width: 820px; line-height: 1.5;">
+            An engineering summary of how VaultPay protects user identity, ensures financial ledger precision, encrypts sensitive payment instruments at rest, and verifies cryptographic integrity during data retrieval.
+        </p>
+    </div>
+
+    <!-- 3-Pillar Security Model Overview -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div class="card" style="border-top: 3px solid var(--brand-primary); padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">👤</span>
+                <strong style="color: var(--text-primary); font-size: 1rem;">1. Identity & Access</strong>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.84rem; line-height: 1.5; margin: 0;">
+                Salted SHA-256 with 256-bit cryptographically random salt per user. Timing-safe verification, sliding-window rate limiting, and session fixation defense.
+            </p>
+            <div style="margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--brand-primary);">
+                app/utils/password_sha256.py
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 3px solid var(--success); padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">💳</span>
+                <strong style="color: var(--text-primary); font-size: 1rem;">2. Sensitive Vault (AEAD)</strong>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.84rem; line-height: 1.5; margin: 0;">
+                AES-256-GCM authenticated encryption at rest with 12-byte random nonces and 16-byte GMAC authentication tags bound to user PIN context.
+            </p>
+            <div style="margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--success-text);">
+                app/utils/crypto_aes_gcm.py
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 3px solid #D97706; padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">⚖️</span>
+                <strong style="color: var(--text-primary); font-size: 1rem;">3. Ledger & Arithmetic</strong>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.84rem; line-height: 1.5; margin: 0;">
+                Exact 64-bit integer paise arithmetic (eliminating binary float errors) paired with canonical JSON deterministic SHA-256 integrity fingerprinting.
+            </p>
+            <div style="margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; color: #B45309;">
+                app/utils/money_integer_cents.py
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: HOW DATA IS STORED (IDENTITY & AUTH) -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.5rem;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">Flow 1</span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.15rem 0 0 0;">
+                    User Identity & Password Storage
+                </h2>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-surface-elevated); padding: 0.2rem 0.5rem; border-radius: 3px; border: 1px solid var(--border-subtle);">
+                Table: users
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.88rem; line-height: 1.55;">
+            <div>
+                <h4 style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">
+                    Storage Pipeline (Registration)
+                </h4>
+                <ol style="padding-left: 1.25rem; margin: 0; color: var(--text-secondary);">
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Salt Generation:</strong> A unique 256-bit (32-byte) cryptographically secure salt is generated using <code>secrets.token_bytes(32)</code> for each individual account.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Digest Computation:</strong> Password string and salt bytes are concatenated and hashed via SHA-256:
+                        <br>
+                        <code>hash = hashlib.sha256(password + salt).hexdigest()</code>
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Database Persistence:</strong> Only <code>password_hash</code> (64 hex characters) and <code>salt</code> (64 hex characters) are written to SQLite.
+                    </li>
+                    <li>
+                        <strong>Zero Plaintext Retention:</strong> Plaintext passwords are wiped from memory and never logged or serialized.
+                    </li>
+                </ol>
+            </div>
+
+            <div>
+                <h4 style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">
+                    Verification Pipeline (Login)
+                </h4>
+                <ol style="padding-left: 1.25rem; margin: 0; color: var(--text-secondary);">
+                    <li style="margin-bottom: 0.4rem;">
+                        User provides username/email and password over TLS.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        Server retrieves the user's stored salt and re-hashes the entered password.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Constant-Time Verification:</strong> Evaluated using <code>hmac.compare_digest(computed_hash, stored_hash)</code> to eliminate timing side-channel attacks.
+                    </li>
+                    <li>
+                        <strong>Session Fixation Defense:</strong> Flask session identifier is regenerated upon successful authentication via <code>session.clear()</code> and <code>session.modified = True</code>.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: HOW DATA IS ENCRYPTED (AES-256-GCM AEAD AT REST) -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.5rem;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--success); text-transform: uppercase; letter-spacing: 0.05em;">Flow 2</span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.15rem 0 0 0;">
+                    Sensitive Payment Instrument Encryption (AES-256-GCM AEAD)
+                </h2>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-surface-elevated); padding: 0.2rem 0.5rem; border-radius: 3px; border: 1px solid var(--border-subtle);">
+                Table: payment_methods
+            </span>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">
+            VaultPay uses <strong>Authenticated Encryption with Associated Data (AEAD)</strong> via AES-256 in Galois/Counter Mode (GCM). Unlike basic CBC or ECB encryption, GCM guarantees both confidentiality (encryption) and authenticity (tamper-proofing).
+        </p>
+
+        <!-- Diagram Box -->
+        <div style="background: #17202A; color: #F8F9FA; padding: 1.1rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; margin-bottom: 1.25rem; overflow-x: auto;">
+            <div style="color: #9CA3AF; margin-bottom: 0.5rem;">// ENCRYPTION AT REST ARCHITECTURE:</div>
+            <div>Plaintext Metadata:  "Visa Exp: 12/28, Campus Branch"</div>
+            <div>                     │</div>
+            <div>Associated Data (AAD): SHA-256(PIN) + User ID  ────────┐ (Bound to tag, NOT encrypted)</div>
+            <div>256-bit Key:          os.environ["ENCRYPTION_KEY"]     │</div>
+            <div>96-bit Nonce (IV):    os.urandom(12) [Fresh Per Save]  │</div>
+            <div>                     │                                 │</div>
+            <div>                     ▼                                 │</div>
+            <div>           [ AES-256-GCM ENGINE ] ◄────────────────────┘</div>
+            <div>                     │</div>
+            <div>       ┌─────────────┴─────────────┐</div>
+            <div>       ▼                           ▼</div>
+            <div>  CIPHERTEXT (Encrypted)      AUTH TAG (128-bit GMAC)</div>
+            <div>  (Opaque binary bytes)       (Cryptographic seal against tampering)</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+            <div style="background: var(--bg-surface-elevated); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Zero CVV Storage Policy</strong>
+                CVV codes are strictly prohibited and scrubbed. Only masked identifiers (e.g. <code>**** **** **** 4242</code>) and non-cardholder-critical metadata are stored.
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Key Isolation</strong>
+                The 256-bit AES key is loaded exclusively into application process memory from secure environment variables. It is <strong>never written to SQLite</strong>.
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">NIST Nonce Freshness</strong>
+                Per NIST SP 800-38D, a fresh 12-byte random nonce is drawn for every single encryption. Nonces are never reused under the same key.
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: HOW DATA IS DECRYPTED (STEP-UP CHALLENGE & TAG VERIFICATION) -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.5rem;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: #D97706; text-transform: uppercase; letter-spacing: 0.05em;">Flow 3</span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.15rem 0 0 0;">
+                    Decryption & Step-Up Reveal Verification
+                </h2>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-surface-elevated); padding: 0.2rem 0.5rem; border-radius: 3px; border: 1px solid var(--border-subtle);">
+                Challenge Gate: /reveal
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.88rem; line-height: 1.55;">
+            <div>
+                <h4 style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">
+                    Decryption Pipeline
+                </h4>
+                <ol style="padding-left: 1.25rem; margin: 0; color: var(--text-secondary);">
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Authorization Gate:</strong> Plaintext metadata is never exposed on standard GET requests. Accessing <code>/reveal</code> renders a step-up challenge gate.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Two-Factor Verification:</strong> User must provide account password + 4-digit security PIN.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Reconstruct AAD Context:</strong> The server reconstructs the exact Associated Authenticated Data from the verified user session and PIN hash.
+                    </li>
+                    <li style="margin-bottom: 0.4rem;">
+                        <strong>Cryptographic Authentication:</strong> <code>AESGCM.decrypt(nonce, ciphertext + tag, aad)</code> checks the 16-byte tag.
+                    </li>
+                    <li>
+                        <strong>Tamper Rejection:</strong> If even 1 bit of ciphertext, tag, nonce, or AAD has been modified, Python's <code>InvalidTag</code> exception is raised and access is denied.
+                    </li>
+                </ol>
+            </div>
+
+            <div>
+                <h4 style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">
+                    Decryption Decision Tree
+                </h4>
+                <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.85rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.55;">
+                    <div style="color: var(--text-primary); font-weight: 600;">IF (Password Valid AND PIN Valid):</div>
+                    <div style="margin-left: 1rem; color: #4B5563;">Reconstruct AAD & Attempt AESGCM.decrypt()</div>
+                    <div style="margin-left: 2rem; color: var(--success-text); font-weight: 600;">✓ Tag Valid ➔ Return Decrypted Data</div>
+                    <div style="margin-left: 2rem; color: #DC2626; font-weight: 600;">✕ InvalidTag ➔ 400 Bad Request (Tampered)</div>
+                    <div style="color: #DC2626; font-weight: 600; margin-top: 0.4rem;">ELSE:</div>
+                    <div style="margin-left: 1rem; color: #DC2626;">Reject with 401 Unauthorized (Gate Locked)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: FINANCIAL PRECISION & TRANSACTION INTEGRITY -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.5rem;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">Flow 4</span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.15rem 0 0 0;">
+                    Financial Precision & Transaction Ledger Integrity
+                </h2>
+            </div>
+            <span style="font-family: var(--font-mono); font-size: 0.75rem; background: var(--bg-surface-elevated); padding: 0.2rem 0.5rem; border-radius: 3px; border: 1px solid var(--border-subtle);">
+                Tables: wallets, transactions
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.88rem; line-height: 1.55;">
+            <div>
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.35rem;">Integer Paise Accounting (Zero Float Error)</strong>
+                <p style="color: var(--text-secondary); margin: 0 0 0.5rem 0;">
+                    Standard floating-point numbers cannot accurately represent base-10 decimals (e.g. <code>0.1 + 0.2 = 0.30000000000000004</code>). VaultPay enforces strict integer arithmetic:
+                </p>
+                <ul style="padding-left: 1.25rem; margin: 0; color: var(--text-secondary);">
+                    <li>All balance amounts are stored as 64-bit integer <strong>paise</strong> (1 INR = 100 paise).</li>
+                    <li>₹150.00 is stored internally as <code>15000</code> paise.</li>
+                    <li>Arithmetic is exact: <code>balance = balance - transfer_cents</code>.</li>
+                </ul>
+            </div>
+
+            <div>
+                <strong style="color: var(--text-primary); display: block; margin-bottom: 0.35rem;">Atomic Transactions & SHA-256 Ledger Fingerprint</strong>
+                <p style="color: var(--text-secondary); margin: 0 0 0.5rem 0;">
+                    Ledger mutations follow ACID guarantees:
+                </p>
+                <ul style="padding-left: 1.25rem; margin: 0; color: var(--text-secondary);">
+                    <li><strong>Atomic Commit:</strong> Debit from sender and credit to recipient execute within a single database transaction. If any error occurs, the entire state rolls back.</li>
+                    <li><strong>Canonical JSON Digest:</strong> Transaction attributes are serialized deterministically (keys sorted, compact separators) and fingerprinted via SHA-256 to ensure immutable audit trails.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: SUMMARY REFERENCE TABLE -->
+    <div class="card" style="padding: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">
+            Cryptographic Architecture Reference Matrix
+        </h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+                <thead>
+                    <tr style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-subtle); text-align: left;">
+                        <th style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Component</th>
+                        <th style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Algorithm</th>
+                        <th style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Key / Salt Size</th>
+                        <th style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Storage Location</th>
+                        <th style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Security Guarantee</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid var(--border-subtle);">
+                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">User Password</td>
+                        <td style="padding: 0.65rem 0.75rem; font-family: var(--font-mono);">Salted SHA-256</td>
+                        <td style="padding: 0.65rem 0.75rem;">256-bit Salt</td>
+                        <td style="padding: 0.65rem 0.75rem;"><code>users.password_hash</code></td>
+                        <td style="padding: 0.65rem 0.75rem; color: var(--success);">Pre-image resistance, unique per user</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-subtle);">
+                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">Payment Methods</td>
+                        <td style="padding: 0.65rem 0.75rem; font-family: var(--font-mono);">AES-256-GCM</td>
+                        <td style="padding: 0.65rem 0.75rem;">256-bit Key / 96-bit Nonce</td>
+                        <td style="padding: 0.65rem 0.75rem;"><code>payment_methods.encrypted_metadata</code></td>
+                        <td style="padding: 0.65rem 0.75rem; color: var(--success);">Confidentiality + Authenticity (AEAD)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-subtle);">
+                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">Ledger Balances</td>
+                        <td style="padding: 0.65rem 0.75rem; font-family: var(--font-mono);">Integer Paise Arithmetic</td>
+                        <td style="padding: 0.65rem 0.75rem;">64-bit Integer</td>
+                        <td style="padding: 0.65rem 0.75rem;"><code>wallets.balance</code></td>
+                        <td style="padding: 0.65rem 0.75rem; color: var(--success);">Exact financial precision, no float drift</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--border-subtle);">
+                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">Transaction Records</td>
+                        <td style="padding: 0.65rem 0.75rem; font-family: var(--font-mono);">Deterministic SHA-256</td>
+                        <td style="padding: 0.65rem 0.75rem;">256-bit Digest</td>
+                        <td style="padding: 0.65rem 0.75rem;"><code>transactions</code> table</td>
+                        <td style="padding: 0.65rem 0.75rem; color: var(--success);">Tamper-evident audit integrity</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">Master Encryption Key</td>
+                        <td style="padding: 0.65rem 0.75rem; font-family: var(--font-mono);">Environment / KMS</td>
+                        <td style="padding: 0.65rem 0.75rem;">256-bit (32 bytes)</td>
+                        <td style="padding: 0.65rem 0.75rem;">App Memory Only</td>
+                        <td style="padding: 0.65rem 0.75rem; color: var(--success);">Zero database or wire exposure</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

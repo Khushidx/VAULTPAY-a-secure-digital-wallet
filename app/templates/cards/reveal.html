@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Decrypted Card Details — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('cards.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+            &larr; Back to Cards Vault
+        </a>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.25rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="svg-icon" style="color: var(--brand-primary); width: 22px; height: 22px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Authenticated Decryption Result
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">
+            AES-256-GCM authentication tag verification.
+        </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem; border-left: 3px solid var(--success); background: var(--success-bg); border: 1px solid var(--success-border);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <svg class="svg-icon" style="color: var(--success); width: 18px; height: 18px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong style="color: var(--success-text); font-size: 0.98rem;">Integrity Tag Verified Successfully</strong>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; margin-bottom: 0;">
+            The 16-byte GCM authentication tag matched the stored ciphertext and nonce. This cryptographically proves that the data has not been altered, truncated, or tampered with since encryption.
+        </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem; color: var(--text-primary);">
+            Card Information
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 0.75rem; font-size: 0.95rem; margin-bottom: 1.25rem;">
+            <span style="color: var(--text-muted);">Card Brand:</span>
+            <strong style="color: var(--text-primary);">{{ card.card_brand }}</strong>
+
+            <span style="color: var(--text-muted);">Masked Number:</span>
+            <span style="font-family: var(--font-mono); color: var(--brand-primary); font-weight: 700;">{{ card.masked_pan }}</span>
+
+            <span style="color: var(--text-muted);">Cardholder:</span>
+            <span style="color: var(--text-secondary);">{{ card.cardholder_name }}</span>
+
+            <span style="color: var(--text-muted);">Expires:</span>
+            <span style="color: var(--text-secondary); font-family: var(--font-mono);">{{ "%02d" % card.exp_month }}/{{ card.exp_year }}</span>
+        </div>
+
+        <h4 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-primary); margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">
+            Decrypted Billing Details:
+        </h4>
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; font-family: var(--font-mono); font-size: 0.92rem; color: var(--text-primary); white-space: pre-wrap;">
+{{ decrypted_details }}
+        </div>
+
+        <h4 style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-top: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">
+            Raw Stored Ciphertext (Base64 of Nonce + Ciphertext + Tag):
+        </h4>
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); word-break: break-all;">
+{{ card.encrypted_billing_details }}
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <a href="{{ url_for('cards.index') }}" class="btn btn-secondary">
+            &larr; Return to Cards Vault
+        </a>
+    </div>
+</div>
+{% endblock %}

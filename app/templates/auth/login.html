@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Log In — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 420px; margin: 3.5rem auto;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+            <div style="display: inline-flex; width: 42px; height: 42px; border-radius: var(--radius-sm); background: var(--info-bg); border: 1px solid var(--info-border); align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--brand-primary);">
+                <svg class="svg-icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary);">Sign In to VaultPay</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+                Enter your credentials to access your secure wallet.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+            {{ form.csrf_token }}
+
+            <div class="form-group">
+                <label for="username_or_email" class="form-label">Username or Email</label>
+                {{ form.username_or_email(class="form-control", placeholder="e.g. alice or alice@college.edu") }}
+                {% if form.username_or_email.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.username_or_email.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                {{ form.password(class="form-control", placeholder="••••••••••••") }}
+                {% if form.password.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.password.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.75rem;">
+                <button type="submit" class="btn" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+                    Sign In
+                </button>
+            </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.75rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+            <span style="color: var(--text-muted); font-size: 0.9rem;">Don't have an account?</span>
+            <a href="{{ url_for('auth.register') }}" style="color: var(--brand-primary); font-weight: 600; text-decoration: none; margin-left: 0.35rem;">
+                Create Account &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

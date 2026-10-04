@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Add Card — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 550px; margin: 0 auto;">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('cards.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+            &larr; Back to Cards Vault
+        </a>
+        <h1 style="font-size: 2rem; font-weight: 800; margin-top: 0.5rem; margin-bottom: 0.25rem; letter-spacing: -0.03em;">
+            Add Card
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">
+            AES-256-GCM encryption of billing metadata.
+        </p>
+    </div>
+
+    <!-- Security Notice Card -->
+    <div class="card" style="margin-bottom: 1.5rem; border-left: 3px solid var(--brand-primary); background: var(--bg-surface-elevated);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.35rem; font-size: 0.92rem; font-weight: 600; display: flex; align-items: center; gap: 0.45rem;">
+            <svg class="svg-icon" style="color: var(--brand-primary); width: 16px; height: 16px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Secure Metadata Storage
+        </h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">
+            This application enforces zero-knowledge boundaries: full card numbers and CVVs are never stored. Only the last 4 digits are kept for identification, and billing details are encrypted using AES-256-GCM.
+        </p>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('cards.new_card') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.cardholder_name.label(class="form-label") }}
+                {{ form.cardholder_name(class="form-control", placeholder="e.g. Alice Student") }}
+                {% if form.cardholder_name.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.cardholder_name.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.card_brand.label(class="form-label") }}
+                    {{ form.card_brand(class="form-control") }}
+                    {% if form.card_brand.errors %}
+                        <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                            {{ form.card_brand.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.last_four.label(class="form-label") }}
+                    {{ form.last_four(class="form-control", placeholder="4242", style="font-family: var(--font-mono);") }}
+                    <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.35rem;">
+                        Strictly 4 digits (e.g. 4242)
+                    </small>
+                    {% if form.last_four.errors %}
+                        <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                            {{ form.last_four.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    {{ form.exp_month.label(class="form-label") }}
+                    {{ form.exp_month(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.exp_year.label(class="form-label") }}
+                    {{ form.exp_year(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.billing_details.label(class="form-label") }}
+                {{ form.billing_details(class="form-control", placeholder="e.g. 123 Campus Way, Bangalore") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.35rem;">
+                    Will be encrypted using AES-256-GCM with a fresh 12-byte random nonce before database write.
+                </small>
+                {% if form.billing_details.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.billing_details.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.75rem;">
+                {{ form.submit(class="btn", style="width: 100%; padding: 0.85rem; font-size: 1rem;") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Cards Vault — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.6rem;">
+            <svg class="svg-icon" style="color: var(--brand-primary); width: 24px; height: 24px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Sensitive Data Vault
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.92rem;">
+            AES-256-GCM Authenticated Encryption for sensitive data at rest.
+        </p>
+    </div>
+    <a href="{{ url_for('cards.new_card') }}" class="btn">
+        + Add Card
+    </a>
+</div>
+
+<div class="card" style="margin-bottom: 2rem; border-left: 3px solid var(--brand-primary); background: var(--bg-surface-elevated);">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <svg class="svg-icon" style="color: var(--brand-primary); width: 18px; height: 18px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <h3 style="font-size: 0.98rem; color: var(--text-primary); font-weight: 600;">Security Architecture in this View</h3>
+    </div>
+    <ul style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; margin-left: 1.25rem;">
+        <li><strong>Zero CVV Policy:</strong> CVVs are never requested, stored, or accepted under any circumstances.</li>
+        <li><strong>Zero Full Card Numbers:</strong> Only the last 4 digits are retained for masked display (<code>**** **** **** 1234</code>).</li>
+        <li><strong>AES-256-GCM Encryption:</strong> Sensitive billing details are encrypted with a unique 12-byte random nonce and verified with a 16-byte authentication tag.</li>
+        <li><strong>IDOR Boundary:</strong> You can only access cards belonging to your authenticated account (<code>session['user_id']</code>).</li>
+    </ul>
+</div>
+
+{% if cards %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.75rem;">
+        {% for card in cards %}
+            <div class="virtual-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <span style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 0.45rem;">
+                        <svg class="svg-icon" style="color: var(--brand-primary); width: 18px; height: 18px;" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        {{ card.card_brand }}
+                    </span>
+                    <span style="font-size: 0.72rem; background: var(--info-bg); border: 1px solid var(--info-border); color: var(--brand-primary); padding: 0.2rem 0.65rem; border-radius: var(--radius-sm); font-weight: 600; font-family: var(--font-mono);">
+                        AES-256-GCM
+                    </span>
+                </div>
+
+                <div class="card-chip"></div>
+
+                <div style="font-family: var(--font-mono); font-size: 1.25rem; letter-spacing: 0.1em; color: var(--text-primary); margin-bottom: 1rem; font-weight: 700;">
+                    {{ card.masked_pan }}
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                    <div>
+                        <span style="text-transform: uppercase; font-size: 0.68rem; display: block; color: var(--text-dim); font-weight: 700; letter-spacing: 0.05em;">Cardholder</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">{{ card.cardholder_name }}</span>
+                    </div>
+                    <div>
+                        <span style="text-transform: uppercase; font-size: 0.68rem; display: block; color: var(--text-dim); font-weight: 700; letter-spacing: 0.05em;">Expires</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">{{ "%02d" % card.exp_month }}/{{ card.exp_year }}</span>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <a href="{{ url_for('cards.reveal', card_id=card.id) }}" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                        Reveal Decrypted Details
+                    </a>
+                    <form method="POST" action="{{ url_for('cards.delete', card_id=card.id) }}" style="display: inline;" onsubmit="return confirm('Remove this card?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn" style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); font-size: 0.8rem; padding: 0.4rem 0.75rem; box-shadow: none;">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 3.5rem 1.5rem;">
+        <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--info-bg); border: 1px solid var(--info-border); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--brand-primary);">
+            <svg class="svg-icon" style="width: 24px; height: 24px;" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        </div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 600;">No Cards Saved</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.75rem; max-width: 480px; margin-left: auto; margin-right: auto; font-size: 0.92rem;">
+            Save a card to observe how sensitive payment metadata is encrypted with AES-256-GCM before database storage.
+        </p>
+        <a href="{{ url_for('cards.new_card') }}" class="btn">
+            + Add Your First Card
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

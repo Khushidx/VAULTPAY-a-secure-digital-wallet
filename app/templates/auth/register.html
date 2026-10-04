@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Register — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 2.5rem auto;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+            <div style="display: inline-flex; width: 42px; height: 42px; border-radius: var(--radius-sm); background: var(--info-bg); border: 1px solid var(--info-border); align-items: center; justify-content: center; margin-bottom: 1rem; color: var(--brand-primary);">
+                <svg class="svg-icon" style="width: 20px; height: 20px;" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary);">Create VaultPay Account</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+                Protected with <strong>Salted SHA-256</strong> with a 256-bit cryptographically secure random salt.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+            {{ form.csrf_token }}
+
+            <div class="form-group">
+                <label for="username" class="form-label">Username</label>
+                {{ form.username(class="form-control", placeholder="e.g. alice_student") }}
+                {% if form.username.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.username.errors[0] }}
+                    </div>
+                {% endif %}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.35rem;">
+                    3-30 characters, letters, numbers, and underscores.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                {{ form.email(class="form-control", placeholder="alice@example.edu") }}
+                {% if form.email.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.email.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                {{ form.password(class="form-control", placeholder="••••••••••••") }}
+                {% if form.password.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.password.errors[0] }}
+                    </div>
+                {% endif %}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.35rem;">
+                    Min 8 chars, with uppercase, lowercase, and a number.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                {{ form.confirm_password(class="form-control", placeholder="••••••••••••") }}
+                {% if form.confirm_password.errors %}
+                    <div style="color: var(--danger); font-size: 0.85rem; margin-top: 0.35rem;">
+                        {{ form.confirm_password.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.75rem;">
+                <button type="submit" class="btn" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+                    Create Account
+                </button>
+            </div>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.75rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+            <span style="color: var(--text-muted); font-size: 0.9rem;">Already have an account?</span>
+            <a href="{{ url_for('auth.login') }}" style="color: var(--brand-primary); font-weight: 600; text-decoration: none; margin-left: 0.35rem;">
+                Log In &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

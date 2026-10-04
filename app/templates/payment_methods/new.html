@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Add Payment Method — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 0 auto;">
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{{ url_for('payment_methods.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+            &larr; Back to Payment Methods
+        </a>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-top: 0.4rem; margin-bottom: 0.2rem; letter-spacing: -0.02em;">
+            Add Payment Method
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">
+            Tokenization and AES-256-GCM metadata protection.
+        </p>
+    </div>
+
+    <!-- Security Notice Banner -->
+    <div class="card" style="margin-bottom: 1.25rem; border-left: 3px solid var(--brand-primary); background: var(--bg-surface-elevated);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.25rem; font-size: 0.88rem; font-weight: 600;">
+            Zero-Knowledge Card Storage
+        </h4>
+        <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin-bottom: 0;">
+            This system strictly protects payment credentials. Only the last 4 digits are stored for reference. The system generates an opaque token and encrypts any metadata using AES-256-GCM.
+        </p>
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="card" style="margin-bottom: 1.25rem;">
+        <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.65rem; font-weight: 600;">
+            Quick Presets:
+        </h4>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="fillPreset('DEMO_VISA', 'HDFC Visa Card', '4242', 'HDFC Bank - Primary Card', '1234')">
+                Visa Card
+            </button>
+            <button type="button" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="fillPreset('DEMO_MASTERCARD', 'SBI Mastercard', '5555', 'State Bank of India - Test Account', '1234')">
+                Mastercard
+            </button>
+            <button type="button" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.3rem 0.75rem;" onclick="fillPreset('DEMO_BANK_ACCOUNT', 'Savings Account', '9876', 'IFSC: HDFC0001234, Account Type: Savings', '1234')">
+                Bank Account
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('payment_methods.new_method') }}" id="pmForm">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.method_type.label(class="form-label") }}
+                {{ form.method_type(class="form-control", id="methodTypeSelect") }}
+                {% if form.method_type.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.method_type.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", id="nameInput", placeholder="e.g. Primary Salary Card") }}
+                {% if form.name.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.name.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.last_four.label(class="form-label") }}
+                {{ form.last_four(class="form-control", id="lastFourInput", placeholder="4242", style="font-family: var(--font-mono);") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.3rem;">
+                    Strictly 4 digits only (e.g. 4242 or 9876). Full card or account numbers are rejected.
+                </small>
+                {% if form.last_four.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.last_four.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.security_key.label(class="form-label") }}
+                {{ form.security_key(class="form-control", id="securityKeyInput", placeholder="1234", style="font-family: var(--font-mono);") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.3rem;">
+                    Strictly 4 numeric digits (e.g. 1234). You will be asked for this key along with your password to reveal metadata.
+                </small>
+                {% if form.security_key.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.security_key.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.demo_metadata.label(class="form-label") }}
+                {{ form.demo_metadata(class="form-control", id="metadataInput", placeholder="e.g. Bank IFSC, card network notes, billing details") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.3rem;">
+                    Metadata encrypted with AES-256-GCM (12-byte random nonce + 16-byte authentication tag).
+                </small>
+                {% if form.demo_metadata.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.demo_metadata.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.88rem;">
+                    {{ form.is_default() }}
+                    {{ form.is_default.label.text }}
+                </label>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                {{ form.submit(class="btn", style="width: 100%; padding: 0.75rem; font-size: 0.95rem;") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function fillPreset(type, name, lastFour, metadata, securityKey='1234') {
+    document.getElementById('methodTypeSelect').value = type;
+    document.getElementById('nameInput').value = name;
+    document.getElementById('lastFourInput').value = lastFour;
+    document.getElementById('securityKeyInput').value = securityKey;
+    document.getElementById('metadataInput').value = metadata;
+}
+</script>
+{% endblock %}

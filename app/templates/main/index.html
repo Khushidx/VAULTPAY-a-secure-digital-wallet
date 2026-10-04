@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Home — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; background: var(--info-bg); border: 1px solid var(--info-border); padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--brand-primary); font-weight: 600; margin-bottom: 1.25rem;">
+        <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>Defense-in-Depth Digital Asset Platform</span>
+    </div>
+    <h1>VaultPay — Secure Digital Wallet</h1>
+    <p>
+        An enterprise-grade financial ledger engineered with salted SHA-256 authentication, AES-256-GCM data encryption at rest, and atomic double-entry transactions in Indian Rupees (₹).
+    </p>
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('wallet.dashboard') }}" class="btn">
+                <span>Dashboard</span>
+                <span style="font-size: 0.85rem;">&rarr;</span>
+            </a>
+            <a href="{{ url_for('wallet.transfer') }}" class="btn btn-secondary">
+                <span>Send Money</span>
+            </a>
+        {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn">
+                <span>Create Account</span>
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">
+                <span>Sign In</span>
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<div class="grid">
+    <div class="card">
+        <div style="display: inline-flex; width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--success-bg); border: 1px solid var(--success-border); align-items: center; justify-content: center; color: var(--success); margin-bottom: 0.85rem;">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="18" height="18">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m9 12 2 2 4-4"></path>
+            </svg>
+        </div>
+        <h2 class="card-title">
+            <span>System Status</span>
+        </h2>
+        <div class="card-body">
+            <p style="margin-bottom: 0.85rem;">The Flask application runtime and SQLite database layers are active with zero latency.</p>
+            <div style="margin-bottom: 1rem;">
+                <span class="status-pill">
+                    <span class="status-dot"></span>
+                    Operational
+                </span>
+            </div>
+            <a href="{{ url_for('main.health_check') }}" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+                Check /health Endpoint &rarr;
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: inline-flex; width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--info-bg); border: 1px solid var(--info-border); align-items: center; justify-content: center; color: var(--brand-primary); margin-bottom: 0.85rem;">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="18" height="18">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+        </div>
+        <h2 class="card-title">
+            <span>Security Engineering</span>
+        </h2>
+        <div class="card-body">
+            <p>Designed with defense-in-depth principles:</p>
+            <ul style="margin-top: 0.5rem; margin-left: 1.25rem; line-height: 1.6;">
+                <li>Salted SHA-256 with unique 256-bit random salts</li>
+                <li>AES-256-GCM authenticated encryption at rest</li>
+                <li>CSRF protection & Secure Session Cookies</li>
+                <li>Defense against IDOR and Double-Spending</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: inline-flex; width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--info-bg); border: 1px solid var(--info-border); align-items: center; justify-content: center; color: var(--brand-primary); margin-bottom: 0.85rem;">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+        <h2 class="card-title">
+            <span>Transaction Ledger</span>
+        </h2>
+        <div class="card-body">
+            <p>Financial integrity safeguards:</p>
+            <ul style="margin-top: 0.5rem; margin-left: 1.25rem; line-height: 1.6;">
+                <li>Strict integer-paise arithmetic in Indian Rupees (₹)</li>
+                <li>SQLite database-level non-negative constraints</li>
+                <li>ACID atomic transaction rollbacks</li>
+                <li>Complete double-entry audit event logging</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

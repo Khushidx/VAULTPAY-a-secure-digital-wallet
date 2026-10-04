@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Security Verification Failed — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 520px; margin: 3.5rem auto; text-align: center; padding: 2.5rem 1.5rem;">
+    <div style="width: 56px; height: 56px; border-radius: var(--radius-sm); background: var(--danger-bg); border: 1px solid var(--danger-border); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: var(--danger);">
+        <svg class="svg-icon" style="width: 28px; height: 28px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    </div>
+    <h2 style="margin-bottom: 0.75rem; font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">CSRF Verification Failed</h2>
+    <p class="card-body" style="margin-bottom: 1.75rem; color: var(--text-secondary);">
+        {{ reason or "The request was blocked because a valid security token (CSRF) was missing or invalid. This protects your account against Cross-Site Request Forgery attacks." }}
+    </p>
+    <a href="{{ url_for('main.index') }}" class="btn">Return to Safety</a>
+</div>
+{% endblock %}

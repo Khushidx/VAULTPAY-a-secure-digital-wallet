@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Security & Profile — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 840px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.6rem;">
+                <svg class="svg-icon" style="color: var(--brand-primary); width: 24px; height: 24px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Security & Account Profile
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem;">
+                Inspect your account details and review the active cryptographic controls in VaultPay.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.6rem;">
+            <a href="{{ url_for('wallet.dashboard') }}" class="btn btn-secondary">
+                &larr; Dashboard
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+                Log Out
+            </a>
+        </div>
+    </div>
+
+    <!-- Account Identity Card -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h2 class="card-title" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; margin-bottom: 1.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="svg-icon" style="color: var(--brand-primary); width: 18px; height: 18px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Account Profile</span>
+        </h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.75rem;">
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Username
+                </span>
+                <span style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">
+                    {{ user.username }}
+                </span>
+            </div>
+
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Email Address
+                </span>
+                <span style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">
+                    {{ user.email }}
+                </span>
+            </div>
+
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Account Status
+                </span>
+                <span class="status-pill" style="font-size: 0.8rem;">
+                    <span class="status-dot"></span>
+                    {{ "Active" if user.is_active else "Inactive" }}
+                </span>
+            </div>
+
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Account Role
+                </span>
+                <span style="font-size: 1rem; font-weight: 600; color: var(--text-secondary); text-transform: capitalize;">
+                    {{ user.role }}
+                </span>
+            </div>
+
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Member Since
+                </span>
+                <span style="font-size: 0.95rem; color: var(--text-secondary);">
+                    {{ user.created_at.strftime('%B %d, %Y') }}
+                </span>
+            </div>
+
+            <div>
+                <span style="text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 0.35rem;">
+                    Wallet Account
+                </span>
+                <span style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--brand-primary); font-weight: 700;">
+                    #{{ user.wallet.id if user.wallet else 'N/A' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Security Controls -->
+    <div class="card" style="margin-bottom: 2rem; border-left: 3px solid var(--success); background: var(--success-bg); border: 1px solid var(--success-border);">
+        <h2 class="card-title" style="border-bottom: 1px solid var(--success-border); padding-bottom: 0.85rem; margin-bottom: 1.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="svg-icon" style="color: var(--success); width: 18px; height: 18px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span style="color: var(--success-text);">Active Cryptographic & Security Controls</span>
+        </h2>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Password Hashing Architecture</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        Stored using SHA-256 with a unique, cryptographically random 256-bit salt per user. Zero plaintext passwords stored.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    Salted SHA-256
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Credential Privacy & Zero-Knowledge UI</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        Plaintext passwords, password hashes, password salts, and encryption keys are strictly excluded from the presentation layer.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--success-text); border: 1px solid var(--success-border); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    [PROTECTED / NOT EXPOSED]
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Brute-Force Rate Limiting</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        Protects login endpoints by locking IP/username for 300 seconds after 5 failed authentication attempts.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    5 Attempts / 5 Mins
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Data Encryption at Rest</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        Payment metadata is encrypted with AES-256-GCM AEAD using fresh 12-byte random nonces, 16-byte authentication tags, and user PIN bound as associated data.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--brand-primary); border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    AES-256-GCM
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Session & Cookie Protection</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        HttpOnly cookies defend against XSS theft, SameSite=Lax defends against CSRF, and session IDs are regenerated upon login.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--brand-primary); border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    HttpOnly + SameSite
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block; font-size: 0.98rem;">Financial Invariant Enforcement</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                        SQLite CHECK constraint ensures balance_cents >= 0. Integer-paise arithmetic eliminates floating-point rounding errors.
+                    </span>
+                </div>
+                <span style="background: var(--bg-surface); color: var(--success-text); border: 1px solid var(--border-subtle); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.35rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap;">
+                    CHECK (balance >= 0)
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

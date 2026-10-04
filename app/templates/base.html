@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VaultPay — Secure Digital Wallet{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <span class="brand-icon">
+                    <svg class="svg-icon" viewBox="0 0 24 24" width="18" height="18">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </span>
+                <span class="brand-text">Vault<span class="brand-accent">Pay</span></span>
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('main.index') }}" class="nav-link">Home</a></li>
+                <li><a href="{{ url_for('security_lab.index') }}" class="nav-link" style="color: var(--brand-primary); font-weight: 600;">Security Lab</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('wallet.dashboard') }}" class="nav-link">Dashboard</a></li>
+                    <li><a href="{{ url_for('wallet.transfer') }}" class="nav-link">Send</a></li>
+                    <li><a href="{{ url_for('wallet.deposit') }}" class="nav-link">Deposit</a></li>
+                    <li><a href="{{ url_for('payment_methods.index') }}" class="nav-link">Payment Methods</a></li>
+                    <li><a href="{{ url_for('wallet.history') }}" class="nav-link">History</a></li>
+                    <li><a href="{{ url_for('main.crypto_architecture') }}" class="nav-link">Architecture</a></li>
+                    <li><a href="{{ url_for('auth.profile') }}" class="nav-link nav-profile-pill">{{ session.get('username') }}</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout-btn">Log Out</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('main.health_check') }}" class="nav-link">System Health</a></li>
+                    <li><a href="{{ url_for('auth.login') }}" class="nav-link">Log In</a></li>
+                    <li><a href="{{ url_for('auth.register') }}" class="btn" style="padding: 0.35rem 0.9rem; font-size: 0.85rem;">Create Account</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Flash messages for user feedback -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main Page Content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 VaultPay - Secure Digital Wallet Project. Built with Python, Flask, and SQLite.</p>
+    </footer>
+</body>
+</html>

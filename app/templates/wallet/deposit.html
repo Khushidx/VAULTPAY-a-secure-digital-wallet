@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Deposit Funds — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 2rem auto;">
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{{ url_for('wallet.dashboard') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+            &larr; Back to Dashboard
+        </a>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-top: 0.4rem; margin-bottom: 0.2rem; letter-spacing: -0.02em;">
+            Deposit Funds
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">
+            Funds are credited instantly and stored as <strong>integer paise</strong> (no floating-point rounding).
+        </p>
+    </div>
+
+    <div class="card">
+        <!-- Current Balance Summary -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; display: block;">Current Balance</span>
+                <span style="font-size: 1.35rem; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary);">{{ wallet.formatted_balance }}</span>
+            </div>
+            <span style="background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm);">
+                INR Active
+            </span>
+        </div>
+
+        <form method="POST" action="{{ url_for('wallet.deposit') }}" novalidate>
+            {{ form.csrf_token }}
+
+            <div class="form-group">
+                <label for="amount" class="form-label">Deposit Amount (₹)</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 0.85rem; top: 0.65rem; color: var(--text-muted); font-weight: 600; font-size: 1.1rem; font-family: var(--font-mono); pointer-events: none;">₹</span>
+                    {{ form.amount(class="form-control", style="padding-left: 2.15rem; font-size: 1.15rem; font-weight: 600; font-family: var(--font-mono);", placeholder="500.00") }}
+                </div>
+                {% if form.amount.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.amount.errors[0] }}
+                    </div>
+                {% endif %}
+                
+                <div style="display: flex; gap: 0.4rem; margin-top: 0.65rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                    <button type="button" class="quick-chip" onclick="document.getElementById('amount').value='100.00'">+₹100</button>
+                    <button type="button" class="quick-chip" onclick="document.getElementById('amount').value='500.00'">+₹500</button>
+                    <button type="button" class="quick-chip" onclick="document.getElementById('amount').value='1000.00'">+₹1,000</button>
+                    <button type="button" class="quick-chip" onclick="document.getElementById('amount').value='5000.00'">+₹5,000</button>
+                </div>
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block;">Positive amount with up to 2 decimal places (e.g. 250 or 999.50).</small>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Note / Description (Optional)</label>
+                {{ form.description(class="form-control", placeholder="e.g. Monthly stipend or freelance payment") }}
+                {% if form.description.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.description.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+                    Confirm & Deposit Funds
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

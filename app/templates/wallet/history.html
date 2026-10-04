@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+            <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em;">Transaction History</h1>
+            <span style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: var(--radius-sm); font-family: var(--font-mono);">
+                Account #{{ wallet.id }}
+            </span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Double-entry audit ledger of all balance adjustments and transfers.
+        </p>
+    </div>
+    <div>
+        <a href="{{ url_for('wallet.dashboard') }}" class="btn btn-secondary">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    {% if transactions %}
+        <div class="tx-table-wrap">
+            <table class="tx-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time (UTC)</th>
+                        <th>Reference UUID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th style="text-align: center;">Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        <tr>
+                            <td style="color: var(--text-muted); font-size: 0.82rem; white-space: nowrap; font-family: var(--font-mono);">
+                                {{ tx.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </td>
+                            <td style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--brand-primary);">
+                                {{ tx.reference_id }}
+                            </td>
+                            <td style="font-weight: 500;">
+                                {% if tx.transaction_type == 'DEPOSIT' %}
+                                    <span style="color: var(--success-text); background: var(--success-bg); border: 1px solid var(--success-border); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem;">
+                                        DEPOSIT
+                                    </span>
+                                {% elif tx.transaction_type == 'TRANSFER_OUT' %}
+                                    <span style="color: var(--danger-text); background: var(--danger-bg); border: 1px solid var(--danger-border); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem;">
+                                        TRANSFER_OUT
+                                    </span>
+                                {% elif tx.transaction_type == 'TRANSFER_IN' %}
+                                    <span style="color: var(--brand-primary); background: var(--info-bg); border: 1px solid var(--info-border); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.75rem;">
+                                        TRANSFER_IN
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.78rem; color: var(--text-secondary);">{{ tx.transaction_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-weight: 600; font-family: var(--font-mono); font-size: 0.9rem; color: {{ 'var(--danger)' if tx.amount_cents < 0 else 'var(--success)' }}; white-space: nowrap;">
+                                {{ '+' if tx.amount_cents > 0 else '' }}{{ tx.formatted_amount }}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if tx.status == 'COMPLETED' %}
+                                    <span class="status-pill" style="font-size: 0.7rem; padding: 0.12rem 0.5rem;">
+                                        <span class="status-dot"></span>
+                                        {{ tx.status }}
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.72rem; color: var(--danger); font-weight: 600;">
+                                        {{ tx.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="color: var(--text-secondary); font-size: 0.85rem;">
+                                {{ tx.description or "-" }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <p style="font-size: 1.05rem; color: var(--text-primary); margin-bottom: 0.35rem; font-weight: 600;">No Recorded Transactions</p>
+            <p style="font-size: 0.88rem; margin-bottom: 1.25rem; color: var(--text-secondary);">No ledger records have been generated for this account yet.</p>
+            <a href="{{ url_for('wallet.deposit') }}" class="btn">Make a Deposit</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

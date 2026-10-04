@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Security Verification — VaultPay — Secure Digital Wallet{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 0 auto;">
+    <div style="margin-bottom: 1.25rem;">
+        <a href="{{ url_for('payment_methods.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+            &larr; Back to Payment Methods
+        </a>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-top: 0.4rem; margin-bottom: 0.2rem; letter-spacing: -0.02em;">
+            Step-Up Authentication
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">
+            Two-factor authorization required to decrypt sensitive metadata at rest.
+        </p>
+    </div>
+
+    <!-- Payment Method Overview -->
+    <div class="card" style="margin-bottom: 1.25rem; border-left: 3px solid var(--brand-primary); background: var(--bg-surface-elevated);">
+        <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 0.65rem; font-weight: 600;">
+            Target Payment Method
+        </h4>
+        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 0.5rem; font-size: 0.88rem;">
+            <span style="color: var(--text-muted);">Nickname:</span>
+            <strong style="color: var(--text-primary);">{{ method.name }}</strong>
+
+            <span style="color: var(--text-muted);">Identifier:</span>
+            <span style="font-family: var(--font-mono); color: var(--brand-primary); font-weight: 600;">{{ method.masked_identifier }}</span>
+
+            <span style="color: var(--text-muted);">Token ID:</span>
+            <span style="font-family: var(--font-mono); color: var(--text-secondary); word-break: break-all; font-size: 0.8rem;">{{ method.token_id }}</span>
+        </div>
+    </div>
+
+    <!-- Security Challenge Form -->
+    <div class="card">
+        <form method="POST" action="{{ url_for('payment_methods.reveal', method_id=method.id) }}">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="Enter your account password") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.3rem;">
+                    Re-enter your account password to prove identity.
+                </small>
+                {% if form.password.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.password.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.security_key.label(class="form-label") }}
+                {{ form.security_key(class="form-control", placeholder="Enter 4-digit PIN (e.g. 1234)", style="font-family: var(--font-mono);") }}
+                <small style="color: var(--text-dim); font-size: 0.78rem; display: block; margin-top: 0.3rem;">
+                    Enter the 4-digit numeric security key specified when creating this payment method.
+                </small>
+                {% if form.security_key.errors %}
+                    <div style="color: var(--danger); font-size: 0.82rem; margin-top: 0.3rem;">
+                        {{ form.security_key.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.65rem; align-items: center;">
+                {{ form.submit(class="btn", style="flex: 1; padding: 0.75rem; font-size: 0.95rem;") }}
+                <a href="{{ url_for('payment_methods.index') }}" class="btn btn-secondary" style="padding: 0.75rem 1.15rem;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

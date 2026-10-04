@@ -1,0 +1,1142 @@
+{% extends "base.html" %}
+
+{% block title %}VaultPay Security Lab — Interactive Cryptography Simulation{% endblock %}
+
+{% block content %}
+<div class="security-lab-container" style="max-width: 1150px; margin: 0 auto; padding-bottom: 3rem;">
+
+    <!-- CSRF Token Meta for Fetch API Calls -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Header & Environment Badges -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle);">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+                <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">
+                    VAULTPAY SECURITY LAB
+                </h1>
+                <span class="badge" style="background: #17202A; color: #FFFFFF; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); letter-spacing: 0.05em;">
+                    DEMO ENVIRONMENT
+                </span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0;">
+                See how VaultPay protects sensitive data and detects unauthorized modification.
+            </p>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; font-style: italic;">
+                ⚠️ Disclaimer: All data shown in this laboratory is simulated and isolated from real wallet data.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button id="btnTogglePresentation" type="button" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.45rem 0.9rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span id="presModeIcon">🎙</span>
+                <span id="presModeText">Presentation Mode: OFF</span>
+            </button>
+            <button id="btnResetDemo" type="button" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.45rem 0.9rem;">
+                ↺ Reset All
+            </button>
+        </div>
+    </div>
+
+    <!-- Persistent Live Cryptographic Status Panel -->
+    <div id="liveStatusPanel" class="card" style="margin-bottom: 1.75rem; border-left: 4px solid var(--success); transition: all 0.25s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600;">
+                    🔒 VaultPay Cryptographic Status
+                </span>
+                <div id="statusTitle" style="font-size: 1.15rem; font-weight: 700; color: var(--success-text); display: flex; align-items: center; gap: 0.5rem;">
+                    <span id="statusIcon">✓</span>
+                    <span id="statusMessage">Transaction Verified & Accepted</span>
+                </div>
+            </div>
+
+            <!-- Status Badges Grid -->
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <div class="stat-badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem;">
+                    <span style="color: var(--text-muted);">Cipher:</span>
+                    <strong id="badgeCipher" style="color: var(--text-primary); margin-left: 0.25rem;">AES-256-GCM</strong>
+                </div>
+                <div class="stat-badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem;">
+                    <span style="color: var(--text-muted);">Ciphertext:</span>
+                    <strong id="badgeCiphertext" style="color: var(--success); margin-left: 0.25rem;">✓ Unmodified</strong>
+                </div>
+                <div class="stat-badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem;">
+                    <span style="color: var(--text-muted);">Auth Tag:</span>
+                    <strong id="badgeAuthTag" style="color: var(--success); margin-left: 0.25rem;">✓ Valid</strong>
+                </div>
+                <div class="stat-badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem;">
+                    <span style="color: var(--text-muted);">SHA-256 Fingerprint:</span>
+                    <strong id="badgeSha" style="color: var(--success); margin-left: 0.25rem;">✓ Match</strong>
+                </div>
+                <div class="stat-badge" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.35rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem;">
+                    <span style="color: var(--text-muted);">Decision:</span>
+                    <strong id="badgeDecision" style="color: var(--success); margin-left: 0.25rem;">✓ ACCEPTED</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Mode Helper Step Banner -->
+    <div id="presentationBanner" style="display: none; background: #17202A; color: #FFFFFF; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Interview Guide (90-Second Demo Flow)</span>
+                <div id="presStepText" style="font-weight: 600; font-size: 0.95rem;">Step 1: Inspect the simulated transaction and click 'PROTECT TRANSACTION'.</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="btnPresPrev" type="button" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: #FFFFFF; border-color: #4B5563;">‹ Prev</button>
+                <button id="btnPresNext" type="button" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">Next Step ›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID LAYOUT -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+
+        <!-- LEFT COLUMN: SECTION 1 - SIMULATED TRANSACTION FORM (FULLY EDITABLE) -->
+        <div class="card" style="display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">
+                    Section 1 · Simulation Input
+                </span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0;">
+                    Simulated VaultPay Transaction
+                </h2>
+            </div>
+
+            <!-- Helpful Instruction Callout -->
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; margin-bottom: 1rem; font-size: 0.8rem; color: #1E40AF; line-height: 1.4;">
+                💡 <strong>Instruction:</strong> You can customize any of the simulated details below (sender, recipient, amount, payment method, transaction ID, or AAD context), then click <strong>PROTECT TRANSACTION</strong> to observe the financial representation and cryptography.
+            </div>
+
+            <form id="formSimulatedTx" onsubmit="event.preventDefault(); protectTransaction();">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">From (Sender)</label>
+                        <input type="text" id="inputSender" class="form-control" value="{{ summary.transaction_data.sender or 'Demo User' }}" style="font-size: 0.85rem;" placeholder="e.g. Alice Smith">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">To (Recipient / Merchant)</label>
+                        <input type="text" id="inputRecipient" class="form-control" value="{{ summary.transaction_data.recipient or 'Demo Merchant' }}" style="font-size: 0.85rem;" placeholder="e.g. Demo Merchant">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Amount (₹ Rupees)</label>
+                        <input type="text" id="inputAmount" class="form-control" value="2500.00" style="font-size: 0.85rem;" placeholder="e.g. 2500.00">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Payment Method</label>
+                        <input type="text" id="inputCard" class="form-control" value="{{ summary.transaction_data.payment_method or 'Visa •••• 4242' }}" style="font-size: 0.85rem;" placeholder="e.g. Visa •••• 4242">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin: 0;">Transaction ID</label>
+                            <button type="button" id="btnRandomTxId" style="background: none; border: none; font-size: 0.7rem; color: var(--brand-primary); cursor: pointer; text-decoration: underline; padding: 0;">🎲 Randomize</button>
+                        </div>
+                        <input type="text" id="inputTxId" class="form-control" value="{{ summary.transaction_data.transaction_id }}" style="font-family: var(--font-mono); font-size: 0.82rem;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">AAD Sender Context</label>
+                        <input type="text" id="inputAadId" class="form-control" value="{{ summary.transaction_data.sender_aad_id or 'demo-user-001' }}" style="font-family: var(--font-mono); font-size: 0.82rem;">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnProtect" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                    <span>🔒</span> PROTECT TRANSACTION
+                </button>
+            </form>
+
+            <div style="margin-top: 1.25rem; padding: 0.75rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); font-size: 0.8rem; color: var(--text-secondary);">
+                <strong>Financial Representation Breakdown:</strong>
+                VaultPay converts <span id="displayRupees" style="color: var(--text-primary); font-weight: 600;">₹2,500.00</span> into
+                <code id="displayPaise" style="font-family: var(--font-mono); font-weight: 700; color: var(--brand-primary); background: #EFF6FF; padding: 0.1rem 0.35rem; border-radius: 3px;">250000 paise</code>
+                (exact 64-bit integer) to eliminate floating-point rounding errors.
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: SECTION 2 - STRUCTURED DATA & SHA-256 FINGERPRINT -->
+        <div class="card" style="display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">
+                    Section 2 · Deterministic Integrity
+                </span>
+                <h2 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0;">
+                    SHA-256 Integrity Fingerprint
+                </h2>
+            </div>
+
+            <!-- Structured JSON representation -->
+            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                Canonical Transaction Representation
+            </label>
+            <pre id="preCanonicalData" style="background: #17202A; color: #F8F9FA; padding: 0.75rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.75rem; overflow-x: auto; margin-bottom: 1rem; line-height: 1.4;">{{ summary.transaction_data | tojson(indent=2) }}</pre>
+
+            <!-- SHA-256 Digest Box -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                        SHA-256 Digest (64 Hex Characters)
+                    </span>
+                    <span id="badgeShaStatus" style="font-size: 0.7rem; font-weight: 700; color: var(--success); background: var(--success-bg); padding: 0.15rem 0.4rem; border-radius: 3px;">
+                        ✓ ORIGINAL FINGERPRINT
+                    </span>
+                </div>
+                <div id="displayShaDigest" style="font-family: var(--font-mono); font-size: 0.8rem; word-break: break-all; color: var(--text-primary); background: #FFFFFF; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                    {{ summary.current_sha256 }}
+                </div>
+            </div>
+
+            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin: 0;">
+                <em>"VaultPay computes a cryptographic hash as an integrity fingerprint. If the underlying data changes, the resulting digest changes immediately. Note: Hashing detects modification only when the trusted digest is preserved."</em>
+            </p>
+        </div>
+    </div>
+
+    <!-- SECTION 3: AES-256-GCM AEAD PROTECTION PIPELINE -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">
+                    Section 3 · Authenticated Encryption (AEAD)
+                </span>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0;">
+                    AES-256-GCM Cryptographic Record
+                </h2>
+            </div>
+            <span style="font-size: 0.8rem; background: #EFF6FF; color: var(--brand-primary); font-weight: 600; padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid #BFDBFE;">
+                Confidentiality + Authentication (AEAD)
+            </span>
+        </div>
+
+        <!-- Cryptographic Structure Diagram -->
+        <div style="background: #17202A; color: #FFFFFF; border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; overflow-x: auto; line-height: 1.4;">
+            <div style="color: #9CA3AF; margin-bottom: 0.5rem;"># Cryptographic Structure (NIST SP 800-38D):</div>
+            <div>Plaintext ────┬───▶ [ AES-256-GCM ] ───┬───▶ Ciphertext</div>
+            <div>               │                         │</div>
+            <div>Nonce ─────────┤                         └───▶ Authentication Tag (16 Bytes)</div>
+            <div>AAD Context ───┘                                      ▲</div>
+            <div>                                                      │ (Integrity Check)</div>
+            <div>Secret Key (32B) ─────────────────────────────────────┘</div>
+        </div>
+
+        <!-- 4-Grid Breakdown of Protected Record -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+            <!-- Algorithm & Key -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Algorithm & Secret Key</div>
+                <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem; margin: 0.25rem 0;">AES-256-GCM</div>
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #B45309; background: #FEF3C7; padding: 0.2rem 0.4rem; border-radius: 3px; display: inline-block;">
+                    🔐 PROTECTED / NOT DISPLAYED
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">
+                    Key isolated in RAM; never serialized or exposed to UI.
+                </div>
+            </div>
+
+            <!-- Nonce -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Nonce (96-Bit / 12 Bytes)</div>
+                <div id="displayNonce" style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--brand-primary); word-break: break-all; margin: 0.25rem 0;">
+                    {{ summary.nonce_formatted }}
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">
+                    Fresh cryptographically random bytes per encryption.
+                </div>
+            </div>
+
+            <!-- Authentication Tag -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Auth Tag (128-Bit / 16 Bytes)</div>
+                <div id="displayAuthTag" style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--success); word-break: break-all; margin: 0.25rem 0;">
+                    {{ summary.tag_formatted }}
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">
+                    Cryptographic tag verified on every decryption attempt.
+                </div>
+            </div>
+
+            <!-- AAD -->
+            <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Authenticated Associated Data</div>
+                <div id="displayAad" style="font-family: var(--font-mono); font-weight: 600; font-size: 0.8rem; color: var(--text-primary); word-break: break-all; margin: 0.25rem 0;">
+                    {{ summary.aad_string }}
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">
+                    Sender ID & TxID bound to ciphertext mathematically.
+                </div>
+            </div>
+        </div>
+
+        <!-- Ciphertext Display -->
+        <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                    Encrypted Payload (Ciphertext Hex Bytes)
+                </span>
+                <span id="badgeCiphertextState" style="font-size: 0.7rem; font-weight: 700; color: var(--success); background: var(--success-bg); padding: 0.1rem 0.4rem; border-radius: 3px;">
+                    ✓ AUTHENTICATED & INTACT
+                </span>
+            </div>
+            <div id="displayCiphertext" style="font-family: var(--font-mono); font-size: 0.8rem; word-break: break-all; color: var(--text-primary); background: #FFFFFF; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-subtle);">
+                {{ summary.ciphertext_formatted }}
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: SIMULATE AN ATTACK (INTERACTIVE USER TAMPERING CONSOLE) -->
+    <div class="card" style="margin-bottom: 2rem; border-top: 3px solid #DC2626;">
+        <div style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: #DC2626; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Section 4 · Adversary Simulation & Custom Tampering
+                </span>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0 0;">
+                    Simulate An Attack on VaultPay Protected Data
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.2rem 0 0 0;">
+                    Choose an attack vector below. You can use <strong>1-click presets</strong> or <strong>input your own custom byte offsets, hex replacements, or altered transaction fields</strong>!
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="btnRestore" type="button" class="btn btn-secondary" style="font-weight: 600; font-size: 0.85rem; padding: 0.45rem 1rem; border-color: var(--border-strong);">
+                    🔄 RESTORE ORIGINAL DEMO
+                </button>
+            </div>
+        </div>
+
+        <!-- Attack Tabs / Mode Selector -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+            <button type="button" class="attack-tab-btn btn btn-primary" data-tab="tabCiphertext" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                1. Ciphertext Mutation
+            </button>
+            <button type="button" class="attack-tab-btn btn btn-secondary" data-tab="tabTag" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                2. Auth Tag Corruption
+            </button>
+            <button type="button" class="attack-tab-btn btn btn-secondary" data-tab="tabNonce" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                3. Nonce Alteration
+            </button>
+            <button type="button" class="attack-tab-btn btn btn-secondary" data-tab="tabAad" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                4. AAD Context Swapping
+            </button>
+            <button type="button" class="attack-tab-btn btn btn-secondary" data-tab="tabData" style="font-size: 0.8rem; padding: 0.35rem 0.8rem;">
+                5. Transaction Data (SHA-256)
+            </button>
+        </div>
+
+        <!-- TAB 1: CIPHERTEXT TAMPERING -->
+        <div id="tabCiphertext" class="attack-tab-content" style="display: block; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #991B1B; margin-bottom: 0.25rem;">
+                Vector 1: Ciphertext Mutation (AES-256-GCM Bit-Flip)
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                💡 <strong>Instruction:</strong> An attacker intercepting the ciphertext modifies data bytes in transit or storage. Specify which byte index to tamper with, or enter a custom hex value.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+                <div style="width: 140px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Byte Offset (0–63):</label>
+                    <input type="number" id="inputCipherOffset" class="form-control" value="3" min="0" max="63" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <div style="width: 180px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Replacement Byte (optional):</label>
+                    <input type="text" id="inputCipherByteVal" class="form-control" placeholder="e.g. 0x7D or leave blank" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <button type="button" id="btnCustomTamperCiphertext" class="btn btn-danger" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; background: #DC2626; color: #FFFFFF; border: none;">
+                    ⚡ Apply Ciphertext Mutation
+                </button>
+                <button type="button" id="btnQuickTamperCiphertext" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+                    Preset Tamper (0x7D)
+                </button>
+                <button type="button" id="btnRestoreCiphertextByte" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; color: #166534; border-color: #BBF7D0; background: #F0FDF4;">
+                    ✓ Apply Original Byte (Valid)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: AUTH TAG TAMPERING -->
+        <div id="tabTag" class="attack-tab-content" style="display: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #991B1B; margin-bottom: 0.25rem;">
+                Vector 2: Authentication Tag Corruption (128-bit GMAC Tag)
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                💡 <strong>Instruction:</strong> An attacker tampers with the 16-byte authentication tag. Pick which byte of the tag to corrupt.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+                <div style="width: 140px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Tag Byte Offset (0–15):</label>
+                    <input type="number" id="inputTagOffset" class="form-control" value="0" min="0" max="15" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <div style="width: 180px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Replacement Byte (optional):</label>
+                    <input type="text" id="inputTagByteVal" class="form-control" placeholder="e.g. 0xFF or blank" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <button type="button" id="btnCustomTamperTag" class="btn btn-danger" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; background: #DC2626; color: #FFFFFF; border: none;">
+                    ⚡ Apply Tag Corruption
+                </button>
+                <button type="button" id="btnQuickTamperTag" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+                    Preset Tamper (0xAA)
+                </button>
+                <button type="button" id="btnRestoreTagByte" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; color: #166534; border-color: #BBF7D0; background: #F0FDF4;">
+                    ✓ Apply Original Tag (Valid)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 3: NONCE TAMPERING -->
+        <div id="tabNonce" class="attack-tab-content" style="display: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #991B1B; margin-bottom: 0.25rem;">
+                Vector 3: Nonce / IV Alteration (96-bit Nonce)
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                💡 <strong>Instruction:</strong> An attacker alters the 12-byte initialization vector. Since the nonce is an authenticated parameter in GCM, changing it halts verification.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+                <div style="width: 140px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Nonce Offset (0–11):</label>
+                    <input type="number" id="inputNonceOffset" class="form-control" value="0" min="0" max="11" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <div style="width: 180px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Replacement Byte (optional):</label>
+                    <input type="text" id="inputNonceByteVal" class="form-control" placeholder="e.g. 0x00 or blank" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <button type="button" id="btnCustomTamperNonce" class="btn btn-danger" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; background: #DC2626; color: #FFFFFF; border: none;">
+                    ⚡ Apply Nonce Alteration
+                </button>
+                <button type="button" id="btnQuickTamperNonce" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+                    Preset Tamper (0x55)
+                </button>
+                <button type="button" id="btnRestoreNonceByte" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; color: #166534; border-color: #BBF7D0; background: #F0FDF4;">
+                    ✓ Apply Original Nonce (Valid)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 4: AAD CONTEXT TAMPERING -->
+        <div id="tabAad" class="attack-tab-content" style="display: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #991B1B; margin-bottom: 0.25rem;">
+                Vector 4: Associated Authenticated Data (AAD) Swapping
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                💡 <strong>Instruction:</strong> An attacker tries to replay or assign the encrypted transaction to a different user ID. Enter the attacker's simulated identifier below.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+                <div style="flex: 1; min-width: 220px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Tampered Sender AAD ID:</label>
+                    <input type="text" id="inputTamperedAad" class="form-control" value="demo-user-999" style="font-size: 0.85rem; font-family: var(--font-mono);">
+                </div>
+                <button type="button" id="btnCustomTamperAad" class="btn btn-danger" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; background: #DC2626; color: #FFFFFF; border: none;">
+                    ⚡ Apply AAD Context
+                </button>
+                <button type="button" id="btnQuickTamperAad" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+                    Preset Tamper (demo-user-999)
+                </button>
+                <button type="button" id="btnRestoreAad" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; color: #166534; border-color: #BBF7D0; background: #F0FDF4;">
+                    ✓ Apply Original AAD (Valid)
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 5: TRANSACTION DATA TAMPERING (SHA-256) -->
+        <div id="tabData" class="attack-tab-content" style="display: none; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #92400E; margin-bottom: 0.25rem;">
+                Vector 5: Transaction Data Tampering (SHA-256 Digest Mismatch)
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                💡 <strong>Instruction:</strong> Modify the underlying transaction parameters (e.g. inflate the amount or change the recipient) and see the SHA-256 fingerprint mismatch immediately.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+                <div style="width: 160px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Tampered Amount (₹):</label>
+                    <input type="text" id="inputTamperedAmount" class="form-control" value="25000.00" style="font-size: 0.85rem;">
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <label style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">Tampered Recipient:</label>
+                    <input type="text" id="inputTamperedRecipient" class="form-control" value="Attacker Account" style="font-size: 0.85rem;">
+                </div>
+                <button type="button" id="btnCustomTamperData" class="btn btn-warning" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; background: #D97706; color: #FFFFFF; border: none;">
+                    ⚡ Apply Data Parameters
+                </button>
+                <button type="button" id="btnQuickTamperData" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+                    Preset Tamper (₹25,000.00)
+                </button>
+                <button type="button" id="btnRestoreData" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; color: #166534; border-color: #BBF7D0; background: #F0FDF4;">
+                    ✓ Apply Original Data (Valid)
+                </button>
+            </div>
+        </div>
+
+        <!-- Global Action Bar -->
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <button id="btnRunCheck" type="button" class="btn btn-primary" style="font-size: 0.85rem; font-weight: 700; padding: 0.55rem 1.25rem;">
+                🛡 RUN SECURITY CHECK ON CURRENT STATE
+            </button>
+        </div>
+
+        <!-- Real-Time Attack / Verification Proof & Hex Diff Panel -->
+        <div id="attackResultPanel" style="display: none; background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <div>
+                    <span id="attackBadge" style="background: #DC2626; color: #FFFFFF; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 3px;">
+                        🚨 ATTACK DETECTED
+                    </span>
+                    <h3 id="attackHeader" style="font-size: 1.05rem; font-weight: 700; color: #991B1B; margin: 0.4rem 0 0.2rem 0;">
+                        Ciphertext Modification Simulated
+                    </h3>
+                    <p id="attackDescription" style="color: #7F1D1D; font-size: 0.85rem; margin: 0;">
+                        Ciphertext modified by user input.
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <span id="attackAuthTagLabel" style="font-size: 0.7rem; font-weight: 600; color: #7F1D1D; text-transform: uppercase;">AES-GCM Authentication</span>
+                    <div id="attackAuthTagStatus" style="font-size: 1.1rem; font-weight: 800; color: #DC2626;">✕ INVALID</div>
+                </div>
+            </div>
+
+            <!-- Hex Diff Comparison -->
+            <div id="diffContainer" style="background: #17202A; color: #F8F9FA; padding: 0.85rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.78rem; overflow-x: auto; line-height: 1.45; margin-bottom: 0.75rem;">
+                <div style="color: #9CA3AF; margin-bottom: 0.25rem;">// BYTE COMPARISON:</div>
+                <div id="diffBefore">BEFORE: A8 F2 91 7C 44 2B ...</div>
+                <div id="diffAfter" style="color: #F87171;">AFTER:  A8 F2 91 7D 44 2B ...</div>
+                <div id="diffMarker" style="color: #FBBF24;">        ^^ CHANGED</div>
+            </div>
+
+            <!-- Statement Box (Defense or Verification) -->
+            <div id="statementBox" style="background: #FFFFFF; border-left: 3px solid #DC2626; padding: 0.65rem 0.85rem; font-size: 0.82rem; color: #7F1D1D;">
+                <strong id="statementLabel">VaultPay Defense Action:</strong>
+                <span id="rejectionExplanation">
+                    The ciphertext was modified. AES-GCM authentication failed, so VaultPay rejected the protected data instead of accepting the modified plaintext. Corrupted plaintext is never decrypted or exposed.
+                </span>
+            </div>
+        </div>
+
+        <!-- Section 5: Defense-in-Depth Security Checklist Table -->
+        <div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.5rem;">
+                VaultPay Security Verification Checklist
+            </div>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                    <thead>
+                        <tr style="background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-subtle); text-align: left;">
+                            <th style="padding: 0.6rem 0.85rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Verification Step</th>
+                            <th style="padding: 0.6rem 0.85rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; width: 140px;">Status</th>
+                            <th style="padding: 0.6rem 0.85rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; width: 180px;">Cryptographic Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="checklistBody">
+                        {% for item in checklist %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle);">
+                            <td style="padding: 0.6rem 0.85rem; font-weight: 500; color: var(--text-primary);">
+                                {{ item.name }}
+                            </td>
+                            <td style="padding: 0.6rem 0.85rem;">
+                                {% if item.passed %}
+                                    <span style="color: var(--success); font-weight: 700;">✓ PASSED</span>
+                                {% else %}
+                                    <span style="color: #DC2626; font-weight: 700;">✕ FAILED</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 0.6rem 0.85rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
+                                {{ item.label }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: "WHAT THE ATTACKER CAN SEE" PANEL -->
+    <div class="card" style="margin-bottom: 2rem; background: #17202A; color: #FFFFFF; border-color: #2D3748;">
+        <div style="border-bottom: 1px solid #2D3748; padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="font-size: 0.7rem; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Separation of Secrets & Public Data
+                </span>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: #FFFFFF; margin: 0.2rem 0 0 0;">
+                    Attacker View (Intercepted Database / Network Record)
+                </h3>
+            </div>
+            <span style="font-size: 0.75rem; background: #374151; color: #D1D5DB; padding: 0.2rem 0.6rem; border-radius: 3px;">
+                Adversary Perspective
+            </span>
+        </div>
+
+        <p style="font-size: 0.82rem; color: #9CA3AF; margin-bottom: 1rem;">
+            If an attacker gains unauthorized access to the database or wire, they see only the encrypted payload and public nonces.
+            The secret key is isolated in VaultPay's application memory / KMS.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; font-family: var(--font-mono); font-size: 0.78rem;">
+            <div style="background: #0F172A; padding: 0.75rem; border-radius: 4px; border: 1px solid #334155;">
+                <div style="color: #94A3B8; font-size: 0.7rem; margin-bottom: 0.25rem;">TRANSACTION ID:</div>
+                <div id="atkTxId" style="color: #38BDF8;">{{ summary.attacker_view.transaction_id }}</div>
+            </div>
+            <div style="background: #0F172A; padding: 0.75rem; border-radius: 4px; border: 1px solid #334155;">
+                <div style="color: #94A3B8; font-size: 0.7rem; margin-bottom: 0.25rem;">NONCE (12 BYTES):</div>
+                <div id="atkNonce" style="color: #A78BFA; word-break: break-all;">{{ summary.attacker_view.nonce }}</div>
+            </div>
+            <div style="background: #0F172A; padding: 0.75rem; border-radius: 4px; border: 1px solid #334155;">
+                <div style="color: #94A3B8; font-size: 0.7rem; margin-bottom: 0.25rem;">AUTH TAG (16 BYTES):</div>
+                <div id="atkTag" style="color: #4ADE80; word-break: break-all;">{{ summary.attacker_view.authentication_tag }}</div>
+            </div>
+            <div style="background: #0F172A; padding: 0.75rem; border-radius: 4px; border: 1px solid #334155;">
+                <div style="color: #EF4444; font-size: 0.7rem; margin-bottom: 0.25rem;">ENCRYPTION KEY:</div>
+                <div style="color: #EF4444; font-weight: 700;">❌ ACCESS DENIED (NOT STORED)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: EDUCATIONAL EXPLANATION SECTION -->
+    <div class="card" style="background: var(--bg-surface); border-left: 4px solid var(--brand-primary);">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">
+            How VaultPay Uses Cryptography: Educational Architecture
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+            <div>
+                <strong style="color: var(--text-primary);">1. SHA-256 for Integrity Fingerprinting:</strong>
+                <p style="margin: 0.35rem 0 0 0;">
+                    SHA-256 is used as a deterministic integrity fingerprint over structured transaction representations. A single-bit alteration in transaction parameters produces a radically different 64-character hex digest (the avalanche effect).
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: var(--text-primary);">2. AES-256-GCM (AEAD):</strong>
+                <p style="margin: 0.35rem 0 0 0;">
+                    AES-GCM combines Galois counter mode with GMAC authentication tags. It guarantees confidentiality (sensitive data is opaque) and authenticity (any tampering with ciphertext, tag, or AAD triggers an immediate <code>InvalidTag</code> rejection).
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: var(--text-primary);">3. Important Note on Password Hashing:</strong>
+                <p style="margin: 0.35rem 0 0 0;">
+                    In this educational project, salted SHA-256 is implemented for passwords and PINs to demonstrate hashing concepts. However, in production banking applications, memory-hard algorithms such as <strong>Argon2id, bcrypt, or scrypt</strong> must be used to resist GPU/ASIC brute-force attacks.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); font-size: 0.82rem; color: var(--text-muted); font-style: italic;">
+            "Cryptography does not make a system invulnerable. It provides specific confidentiality, integrity, and authentication properties when implemented and used correctly."
+        </div>
+    </div>
+
+</div>
+
+<!-- JAVASCRIPT: REAL BACKEND CRYPTO INTERACTION & PRESENTATION MODE -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+    // Presentation Mode Steps
+    let presentationActive = false;
+    let currentStep = 0;
+    const presentationSteps = [
+        {
+            title: "Step 1: Inspect Simulated Transaction",
+            text: "Examine or modify the simulated transaction details above. Click 'PROTECT TRANSACTION' to start.",
+            action: null
+        },
+        {
+            title: "Step 2: Cryptographic Protection Applied",
+            text: "Notice the SHA-256 fingerprint and AES-256-GCM AEAD encryption record generated with an isolated session key.",
+            action: () => protectTransaction()
+        },
+        {
+            title: "Step 3: Simulate Attacker Modification (1 Byte)",
+            text: "Now simulate an attacker modifying exactly ONE BYTE of the stored ciphertext (0x7C ➔ 0x7D).",
+            action: () => triggerAttack("ciphertext", { byte_index: 3 })
+        },
+        {
+            title: "Step 4: Cryptographic Rejection Observed",
+            text: "Observe: AES-GCM authentication fails immediately with an InvalidTag exception. Corrupted data is rejected.",
+            action: null
+        },
+        {
+            title: "Step 5: Restore Pristine Record",
+            text: "Click 'RESTORE ORIGINAL DEMO' to reset the record and verify genuine plaintext decryption.",
+            action: () => restoreDemo()
+        }
+    ];
+
+    // Helper for authenticated POST requests
+    async function postJson(url, payload = {}) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "Operation failed");
+        }
+        return await response.json();
+    }
+
+    // Protect Transaction Function
+    window.protectTransaction = async function() {
+        try {
+            const payload = {
+                sender: document.getElementById("inputSender").value,
+                recipient: document.getElementById("inputRecipient").value,
+                amount: document.getElementById("inputAmount").value,
+                payment_method: document.getElementById("inputCard").value,
+                transaction_id: document.getElementById("inputTxId").value,
+                sender_aad_id: document.getElementById("inputAadId").value
+            };
+            const result = await postJson("{{ url_prefix }}/security-lab/api/protect", payload);
+            updateUi(result);
+        } catch (e) {
+            alert("Protection failed: " + e.message);
+        }
+    };
+
+    // Trigger Attack Function
+    async function triggerAttack(type, extraPayload = {}) {
+        try {
+            const result = await postJson(`{{ url_prefix }}/security-lab/api/attack/${type}`, extraPayload);
+            updateUi(result);
+        } catch (e) {
+            alert("Attack simulation failed: " + e.message);
+        }
+    }
+
+    // Run Security Check
+    async function runSecurityCheck() {
+        try {
+            const result = await postJson("{{ url_prefix }}/security-lab/api/verify");
+            updateUi(result);
+        } catch (e) {
+            alert("Security check failed: " + e.message);
+        }
+    }
+
+    // Restore Demo
+    async function restoreDemo() {
+        try {
+            const result = await postJson("{{ url_prefix }}/security-lab/api/restore");
+            updateUi(result);
+        } catch (e) {
+            alert("Restore failed: " + e.message);
+        }
+    }
+
+    // Update UI Elements with verified Python data
+    function updateUi(data) {
+        const summary = data.summary;
+        const panel = data.status_panel;
+        const accepted = data.overall_accepted;
+
+        // 1. Live Status Banner
+        const statusPanel = document.getElementById("liveStatusPanel");
+        const statusTitle = document.getElementById("statusTitle");
+        const statusIcon = document.getElementById("statusIcon");
+        const statusMessage = document.getElementById("statusMessage");
+
+        if (accepted) {
+            statusPanel.style.borderLeftColor = "var(--success)";
+            statusTitle.style.color = "var(--success-text)";
+            statusIcon.innerText = "✓";
+            statusMessage.innerText = "Transaction Verified & Accepted";
+            document.getElementById("badgeCiphertext").innerText = "✓ Unmodified";
+            document.getElementById("badgeCiphertext").style.color = "var(--success)";
+            document.getElementById("badgeAuthTag").innerText = "✓ Valid";
+            document.getElementById("badgeAuthTag").style.color = "var(--success)";
+            document.getElementById("badgeSha").innerText = "✓ Match";
+            document.getElementById("badgeSha").style.color = "var(--success)";
+            document.getElementById("badgeDecision").innerText = "✓ ACCEPTED";
+            document.getElementById("badgeDecision").style.color = "var(--success)";
+        } else {
+            statusPanel.style.borderLeftColor = "#DC2626";
+            statusTitle.style.color = "#991B1B";
+            statusIcon.innerText = "🚨";
+            statusMessage.innerText = "TAMPERING DETECTED — REJECTED";
+            document.getElementById("badgeCiphertext").innerText = panel.ciphertext === "MODIFIED" ? "⚠ MODIFIED" : "✓ Unmodified";
+            document.getElementById("badgeCiphertext").style.color = panel.ciphertext === "MODIFIED" ? "#DC2626" : "var(--success)";
+            document.getElementById("badgeAuthTag").innerText = panel.authentication === "Valid" ? "✓ Valid" : "✕ FAILED";
+            document.getElementById("badgeAuthTag").style.color = panel.authentication === "Valid" ? "var(--success)" : "#DC2626";
+            document.getElementById("badgeSha").innerText = panel.integrity === "Valid" ? "✓ Match" : "✕ MISMATCH";
+            document.getElementById("badgeSha").style.color = panel.integrity === "Valid" ? "var(--success)" : "#DC2626";
+            document.getElementById("badgeDecision").innerText = "🚨 REJECTED";
+            document.getElementById("badgeDecision").style.color = "#DC2626";
+        }
+
+        // 2. Transaction Inputs and Integer Display
+        document.getElementById("displayRupees").innerText = summary.transaction_data.amount_display;
+        document.getElementById("displayPaise").innerText = `${summary.transaction_data.amount_cents} paise`;
+
+        // 3. Canonical representation & SHA-256
+        document.getElementById("preCanonicalData").innerText = JSON.stringify(summary.transaction_data, null, 2);
+        document.getElementById("displayShaDigest").innerText = summary.current_sha256;
+        const shaBadge = document.getElementById("badgeShaStatus");
+        if (summary.sha256_match) {
+            shaBadge.innerText = "✓ ORIGINAL FINGERPRINT";
+            shaBadge.style.color = "var(--success)";
+            shaBadge.style.background = "var(--success-bg)";
+        } else {
+            shaBadge.innerText = "✕ HASH MISMATCH";
+            shaBadge.style.color = "#DC2626";
+            shaBadge.style.background = "#FEF2F2";
+        }
+
+        // 4. Crypto Records
+        document.getElementById("displayNonce").innerText = summary.nonce_formatted;
+        document.getElementById("displayAuthTag").innerText = summary.tag_formatted;
+        document.getElementById("displayAad").innerText = summary.aad_string;
+        document.getElementById("displayCiphertext").innerText = summary.ciphertext_formatted;
+
+        const cipherStateBadge = document.getElementById("badgeCiphertextState");
+        if (accepted) {
+            cipherStateBadge.innerText = "✓ AUTHENTICATED & INTACT";
+            cipherStateBadge.style.color = "var(--success)";
+            cipherStateBadge.style.background = "var(--success-bg)";
+        } else {
+            cipherStateBadge.innerText = "⚠ MODIFIED / UNVERIFIED";
+            cipherStateBadge.style.color = "#DC2626";
+            cipherStateBadge.style.background = "#FEF2F2";
+        }
+
+        // 5. Attacker View
+        document.getElementById("atkTxId").innerText = summary.attacker_view.transaction_id;
+        document.getElementById("atkNonce").innerText = summary.attacker_view.nonce;
+        document.getElementById("atkTag").innerText = summary.attacker_view.authentication_tag;
+
+        // 6. Attack / Verification Result Panel
+        latestSummary = summary;
+        const attackPanel = document.getElementById("attackResultPanel");
+        const attackBadge = document.getElementById("attackBadge");
+        const attackHeader = document.getElementById("attackHeader");
+        const attackDescription = document.getElementById("attackDescription");
+        const attackAuthTagLabel = document.getElementById("attackAuthTagLabel");
+        const attackAuthTagStatus = document.getElementById("attackAuthTagStatus");
+        const diffContainer = document.getElementById("diffContainer");
+        const diffBefore = document.getElementById("diffBefore");
+        const diffAfter = document.getElementById("diffAfter");
+        const diffMarker = document.getElementById("diffMarker");
+        const statementBox = document.getElementById("statementBox");
+        const statementLabel = document.getElementById("statementLabel");
+        const rejectionExplanation = document.getElementById("rejectionExplanation");
+
+        if (data.last_attack_type) {
+            attackPanel.style.display = "block";
+
+            if (accepted) {
+                // AUTHENTICATION VALID & ACCEPTED STATE
+                attackPanel.style.background = "#F0FDF4";
+                attackPanel.style.borderColor = "#BBF7D0";
+
+                attackBadge.style.background = "#16A34A";
+                attackBadge.innerText = "✓ AUTHENTICATION VALID";
+
+                attackHeader.style.color = "#166534";
+                attackHeader.innerText = data.last_attack_description || "Data Authenticated & Intact";
+
+                attackDescription.style.color = "#15803D";
+                attackDescription.innerText = "Input matches authentic protected record. Cryptographic verification succeeded.";
+
+                attackAuthTagLabel.style.color = "#166534";
+                attackAuthTagLabel.innerText = "AES-GCM Authentication";
+                attackAuthTagStatus.innerText = "✓ VALID";
+                attackAuthTagStatus.style.color = "#16A34A";
+
+                if (data.diff_info) {
+                    diffContainer.style.display = "block";
+                    diffBefore.innerText = `BEFORE: ${data.diff_info.before_hex}`;
+                    diffAfter.innerText = `AFTER:  ${data.diff_info.after_hex}`;
+                    diffAfter.style.color = "#4ADE80";
+                    diffMarker.innerText = `        ${data.diff_info.marker}`;
+                    diffMarker.style.color = "#4ADE80";
+                } else {
+                    diffContainer.style.display = "none";
+                }
+
+                statementBox.style.borderLeftColor = "#16A34A";
+                statementBox.style.color = "#166534";
+                statementLabel.innerText = "VaultPay Verification Result: ";
+                rejectionExplanation.innerText = "AES-256-GCM authentication tag verified successfully! The ciphertext, authentication tag, nonce, and AAD match the authentic record. Decryption succeeds and the transaction is ACCEPTED.";
+            } else {
+                // ATTACK DETECTED & REJECTED STATE
+                attackPanel.style.background = "#FEF2F2";
+                attackPanel.style.borderColor = "#FECACA";
+
+                attackBadge.style.background = "#DC2626";
+                attackBadge.innerText = "🚨 ATTACK DETECTED";
+
+                attackHeader.style.color = "#991B1B";
+                attackHeader.innerText = data.last_attack_description || "Tampering Detected";
+
+                attackDescription.style.color = "#7F1D1D";
+                attackDescription.innerText = "Data was altered. Cryptographic defense detected unauthorized modification.";
+
+                attackAuthTagLabel.style.color = "#7F1D1D";
+                const isTagOrAadOrCipher = (panel.authentication !== "Valid");
+                attackAuthTagLabel.innerText = isTagOrAadOrCipher ? "AES-GCM Authentication" : "SHA-256 Integrity";
+                attackAuthTagStatus.innerText = isTagOrAadOrCipher ? "✕ INVALID" : "✕ MISMATCH";
+                attackAuthTagStatus.style.color = "#DC2626";
+
+                if (data.diff_info) {
+                    diffContainer.style.display = "block";
+                    diffBefore.innerText = `BEFORE: ${data.diff_info.before_hex}`;
+                    diffAfter.innerText = `AFTER:  ${data.diff_info.after_hex}`;
+                    diffAfter.style.color = "#F87171";
+                    diffMarker.innerText = `        ${data.diff_info.marker}`;
+                    diffMarker.style.color = "#FBBF24";
+                } else {
+                    diffContainer.style.display = "none";
+                }
+
+                statementBox.style.borderLeftColor = "#DC2626";
+                statementBox.style.color = "#7F1D1D";
+                statementLabel.innerText = "VaultPay Defense Action: ";
+                rejectionExplanation.innerText = data.error_message || "Cryptographic verification failed! Tampered data rejected.";
+            }
+        } else {
+            attackPanel.style.display = "none";
+        }
+
+        // 7. Security Checklist Table
+        const checklistBody = document.getElementById("checklistBody");
+        checklistBody.innerHTML = "";
+        data.checklist.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid var(--border-subtle)";
+            tr.innerHTML = `
+                <td style="padding: 0.6rem 0.85rem; font-weight: 500; color: var(--text-primary);">${item.name}</td>
+                <td style="padding: 0.6rem 0.85rem;">
+                    <span style="color: ${item.passed ? "var(--success)" : "#DC2626"}; font-weight: 700;">
+                        ${item.passed ? "✓ PASSED" : "✕ FAILED"}
+                    </span>
+                </td>
+                <td style="padding: 0.6rem 0.85rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
+                    ${item.label}
+                </td>
+            `;
+            checklistBody.appendChild(tr);
+        });
+    }
+
+    // Randomize Tx ID Helper
+    document.getElementById("btnRandomTxId").addEventListener("click", function() {
+        const randHex = Math.random().toString(16).substring(2, 10).toUpperCase();
+        document.getElementById("inputTxId").value = "VP-DEMO-" + randHex;
+    });
+
+    // Tab Switching Logic
+    const tabButtons = document.querySelectorAll(".attack-tab-btn");
+    const tabContents = document.querySelectorAll(".attack-tab-content");
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener("click", function() {
+            tabButtons.forEach(b => {
+                b.classList.remove("btn-primary");
+                b.classList.add("btn-secondary");
+            });
+            this.classList.remove("btn-secondary");
+            this.classList.add("btn-primary");
+
+            const targetTab = this.getAttribute("data-tab");
+            tabContents.forEach(tc => {
+                tc.style.display = tc.id === targetTab ? "block" : "none";
+            });
+        });
+    });
+
+    // Event Listeners for Attack Vectors
+    // 1. Ciphertext
+    document.getElementById("btnCustomTamperCiphertext").addEventListener("click", function() {
+        const offset = document.getElementById("inputCipherOffset").value;
+        const val = document.getElementById("inputCipherByteVal").value.trim();
+        triggerAttack("ciphertext", {
+            byte_index: offset,
+            new_byte_val: val !== "" ? val : null
+        });
+    });
+    document.getElementById("btnQuickTamperCiphertext").addEventListener("click", function() {
+        document.getElementById("inputCipherOffset").value = 3;
+        document.getElementById("inputCipherByteVal").value = "0x7D";
+        triggerAttack("ciphertext", { byte_index: 3, new_byte_val: "0x7D" });
+    });
+    document.getElementById("btnRestoreCiphertextByte").addEventListener("click", function() {
+        const offset = parseInt(document.getElementById("inputCipherOffset").value) || 0;
+        let origByteHex = null;
+        if (latestSummary && latestSummary.original_ciphertext_hex) {
+            const hex = latestSummary.original_ciphertext_hex;
+            if (offset * 2 + 2 <= hex.length) {
+                origByteHex = "0x" + hex.substring(offset * 2, offset * 2 + 2);
+            }
+        }
+        document.getElementById("inputCipherByteVal").value = origByteHex || "";
+        triggerAttack("ciphertext", {
+            byte_index: offset,
+            new_byte_val: origByteHex
+        });
+    });
+
+    // 2. Tag
+    document.getElementById("btnCustomTamperTag").addEventListener("click", function() {
+        const offset = document.getElementById("inputTagOffset").value;
+        const val = document.getElementById("inputTagByteVal").value.trim();
+        triggerAttack("tag", {
+            byte_index: offset,
+            new_byte_val: val !== "" ? val : null
+        });
+    });
+    document.getElementById("btnQuickTamperTag").addEventListener("click", function() {
+        document.getElementById("inputTagOffset").value = 0;
+        document.getElementById("inputTagByteVal").value = "0xAA";
+        triggerAttack("tag", { byte_index: 0, new_byte_val: "0xAA" });
+    });
+    document.getElementById("btnRestoreTagByte").addEventListener("click", function() {
+        const offset = parseInt(document.getElementById("inputTagOffset").value) || 0;
+        let origByteHex = null;
+        if (latestSummary && latestSummary.original_tag_hex) {
+            const hex = latestSummary.original_tag_hex;
+            if (offset * 2 + 2 <= hex.length) {
+                origByteHex = "0x" + hex.substring(offset * 2, offset * 2 + 2);
+            }
+        }
+        document.getElementById("inputTagByteVal").value = origByteHex || "";
+        triggerAttack("tag", {
+            byte_index: offset,
+            new_byte_val: origByteHex
+        });
+    });
+
+    // 3. Nonce
+    document.getElementById("btnCustomTamperNonce").addEventListener("click", function() {
+        const offset = document.getElementById("inputNonceOffset").value;
+        const val = document.getElementById("inputNonceByteVal").value.trim();
+        triggerAttack("nonce", {
+            byte_index: offset,
+            new_byte_val: val !== "" ? val : null
+        });
+    });
+    document.getElementById("btnQuickTamperNonce").addEventListener("click", function() {
+        document.getElementById("inputNonceOffset").value = 0;
+        document.getElementById("inputNonceByteVal").value = "0x55";
+        triggerAttack("nonce", { byte_index: 0, new_byte_val: "0x55" });
+    });
+    document.getElementById("btnRestoreNonceByte").addEventListener("click", function() {
+        const offset = parseInt(document.getElementById("inputNonceOffset").value) || 0;
+        let origByteHex = null;
+        if (latestSummary && latestSummary.original_nonce_hex) {
+            const hex = latestSummary.original_nonce_hex;
+            if (offset * 2 + 2 <= hex.length) {
+                origByteHex = "0x" + hex.substring(offset * 2, offset * 2 + 2);
+            }
+        }
+        document.getElementById("inputNonceByteVal").value = origByteHex || "";
+        triggerAttack("nonce", {
+            byte_index: offset,
+            new_byte_val: origByteHex
+        });
+    });
+
+    // 4. AAD
+    document.getElementById("btnCustomTamperAad").addEventListener("click", function() {
+        const aadUser = document.getElementById("inputTamperedAad").value.trim();
+        triggerAttack("aad", { new_aad_user: aadUser });
+    });
+    document.getElementById("btnQuickTamperAad").addEventListener("click", function() {
+        document.getElementById("inputTamperedAad").value = "demo-user-999";
+        triggerAttack("aad", { new_aad_user: "demo-user-999" });
+    });
+    document.getElementById("btnRestoreAad").addEventListener("click", function() {
+        const origUser = (latestSummary && latestSummary.original_aad_user) ? latestSummary.original_aad_user : "demo-user-001";
+        document.getElementById("inputTamperedAad").value = origUser;
+        triggerAttack("aad", { new_aad_user: origUser });
+    });
+
+    // 5. Transaction Data
+    document.getElementById("btnCustomTamperData").addEventListener("click", function() {
+        const amountStr = document.getElementById("inputTamperedAmount").value.trim();
+        const recipient = document.getElementById("inputTamperedRecipient").value.trim();
+        triggerAttack("data", {
+            new_amount_str: amountStr,
+            new_recipient: recipient
+        });
+    });
+    document.getElementById("btnQuickTamperData").addEventListener("click", function() {
+        document.getElementById("inputTamperedAmount").value = "25000.00";
+        document.getElementById("inputTamperedRecipient").value = "Attacker Account";
+        triggerAttack("data", {
+            new_amount_str: "25000.00",
+            new_recipient: "Attacker Account"
+        });
+    });
+    document.getElementById("btnRestoreData").addEventListener("click", function() {
+        const origAmount = (latestSummary && latestSummary.original_transaction_data)
+            ? (latestSummary.original_transaction_data.amount_cents / 100).toFixed(2)
+            : "2500.00";
+        const origRecipient = (latestSummary && latestSummary.original_transaction_data)
+            ? latestSummary.original_transaction_data.recipient
+            : "Demo Merchant";
+        document.getElementById("inputTamperedAmount").value = origAmount;
+        document.getElementById("inputTamperedRecipient").value = origRecipient;
+        triggerAttack("data", {
+            new_amount_str: origAmount,
+            new_recipient: origRecipient
+        });
+    });
+
+    // Global Check & Restore
+    document.getElementById("btnRunCheck").addEventListener("click", runSecurityCheck);
+    document.getElementById("btnRestore").addEventListener("click", restoreDemo);
+    document.getElementById("btnResetDemo").addEventListener("click", restoreDemo);
+
+    // Presentation Mode Logic
+    const btnPres = document.getElementById("btnTogglePresentation");
+    const presBanner = document.getElementById("presentationBanner");
+    const presStepText = document.getElementById("presStepText");
+    const presText = document.getElementById("presModeText");
+
+    btnPres.addEventListener("click", function() {
+        presentationActive = !presentationActive;
+        if (presentationActive) {
+            presBanner.style.display = "block";
+            presText.innerText = "Presentation Mode: ON";
+            btnPres.style.background = "#17202A";
+            btnPres.style.color = "#FFFFFF";
+            currentStep = 0;
+            renderPresStep();
+        } else {
+            presBanner.style.display = "none";
+            presText.innerText = "Presentation Mode: OFF";
+            btnPres.style.background = "";
+            btnPres.style.color = "";
+        }
+    });
+
+    function renderPresStep() {
+        const step = presentationSteps[currentStep];
+        presStepText.innerHTML = `<strong>${step.title}:</strong> ${step.text}`;
+        if (step.action) {
+            step.action();
+        }
+    }
+
+    document.getElementById("btnPresNext").addEventListener("click", function() {
+        if (currentStep < presentationSteps.length - 1) {
+            currentStep++;
+            renderPresStep();
+        }
+    });
+
+    document.getElementById("btnPresPrev").addEventListener("click", function() {
+        if (currentStep > 0) {
+            currentStep--;
+            renderPresStep();
+        }
+    });
+});
+</script>
+{% endblock %}
