@@ -271,6 +271,14 @@ python scripts/verify_e2e_live.py
 
 ---
 
+## Authors & Contributors
+
+This project was engineered as a collaborative Cryptography capstone project by: 
+
+* **Anushka Roy** 
+* **Khushi Gojanur** 
+
 ## License
 
 This project is licensed under the MIT License.
+
